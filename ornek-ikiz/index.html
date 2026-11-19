@@ -33,10 +33,12 @@
   var M = {
     tr: { acil: "ACİL DURDUR mandalı kurulu — bobinler durduruldu", cevrimdisi: "Cihazdan veri yok — çevrimdışı simülasyon", bagli: "Cihaz bağlı",
           bagliDegil: "Cihaz bağlı değil", bobin: "Bobin", aktif: "Aktif", faz: "Faz (°)", evet: "evet", hayir: "hayır",
-          model: "Model tahmini, ölçüm değil", enYuksek: "En yüksek: ", durum: "Alan haritası durumu: " },
+          model: "Model tahmini, ölçüm değil", enYuksek: "En yüksek: ", durum: "Alan haritası durumu: ",
+          sifir: "Bobinler çalışmıyor — alan yok" },
     en: { acil: "EMERGENCY STOP latch set — coils stopped", cevrimdisi: "No data from the device — offline simulation", bagli: "Device connected",
           bagliDegil: "Device not connected", bobin: "Coil", aktif: "Active", faz: "Phase (°)", evet: "yes", hayir: "no",
-          model: "Model estimate, not a measurement", enYuksek: "Peak: ", durum: "Field map status: " }
+          model: "Model estimate, not a measurement", enYuksek: "Peak: ", durum: "Field map status: ",
+          sifir: "Coils are off — no field" }
   }[dil];
   document.documentElement.lang = dil;
   document.getElementById("hBobin").textContent = M.bobin;
@@ -69,7 +71,12 @@
   }
   function alan(o) {
     document.getElementById("etiket").textContent = M.model;
-    if (o.durum !== "tamam") { document.getElementById("enYuksek").textContent = M.durum + o.durum; return; }
+    if (o.durum !== "tamam") {  // harita yok: eski çizim KALMAZ (yanıltır)
+      var cv0 = document.getElementById("harita");
+      cv0.getContext("2d").clearRect(0, 0, cv0.width, cv0.height);
+      document.getElementById("enYuksek").textContent = o.durum === "sifir" ? M.sifir : M.durum + o.durum;
+      return;
+    }
     var b = Uint8Array.from(atob(o.deger), function (c) { return c.charCodeAt(0); });
     var nx = o.izgara.boyut[0], ny = o.izgara.boyut[1], nz = o.izgara.boyut[2];
     var cv = document.getElementById("harita"); cv.width = nx; cv.height = nz;
@@ -93,6 +100,7 @@
     var kopuk = Date.now() - sonDurum > 3000;
     var c = document.getElementById("cevrimdisi");
     c.style.display = kopuk ? "block" : "none"; c.textContent = M.cevrimdisi;
+    if (kopuk) document.getElementById("baglanti").textContent = M.bagliDegil;
   }, 500);
   hazirGonder();
 })();

@@ -26,7 +26,17 @@
   }
   function gonder(ileti) {
     if (!cerceve.contentWindow) return;
-    if (ileti.tur === "pemf.ikiz.durum" && acil) ileti = Object.assign({}, ileti, { acilDurdur: true });
+    if (acil) {
+      // Uygulamadaki gibi: ACİL DURDUR'dan sonra bütün bobinler durur, alan sıfırdır; mandal "Sıfırla"ya kadar kurulu kalır.
+      if (ileti.tur === "pemf.ikiz.durum") {
+        ileti = Object.assign({}, ileti, {
+          acilDurdur: true,
+          bobinler: (ileti.bobinler || []).map(function (b) { return Object.assign({}, b, { aktif: false }); }),
+        });
+      } else if (ileti.tur === "pemf.ikiz.alan") {
+        ileti = { tur: ileti.tur, surum: ileti.surum, zaman: ileti.zaman, durum: "sifir", modelTahmini: true };
+      }
+    }
     cerceve.contentWindow.postMessage(JSON.stringify(ileti), "*");
   }
   function tik() {
@@ -42,7 +52,6 @@
     if (i >= kayit.length) { i = 0; t = 0; } // döngü
     document.getElementById("zaman").textContent = t.toFixed(1).replace(".", ",");
     document.getElementById("ilerleme").textContent = i + " / " + kayit.length;
-    requestAnimationFrame(tik);
   }
   window.addEventListener("message", function (e) {
     if (e.source !== cerceve.contentWindow) return;
@@ -66,5 +75,6 @@
   anahtar("acil", function () { acil = !acil; yaz("bilgi", "ACİL DURDUR mandalı " + (acil ? "KURULU" : "sıfırlandı")); return acil; });
   document.getElementById("dil").onchange = yukle;
   yukle();
-  requestAnimationFrame(tik);
+  // Zamanlayıcı (requestAnimationFrame DEĞİL): sekme arka plandayken rAF durur, iletiler kesilir ve ikiz yanlışlıkla "çevrimdışı"ya geçer.
+  setInterval(tik, 100);
 })();
