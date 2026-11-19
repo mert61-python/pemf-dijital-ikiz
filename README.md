@@ -1,5 +1,9 @@
 # PEMF dijital ikiz kiti
 
+> **Bu depo dijital ikiz geliştiricisi içindir.** Bağlantıyla paylaşıldı; herkes okuyabilir. Doğrudan kod göndermek için GitHub
+> kullanıcı adınızı koordinatöre iletin, depoya **bakım (maintain)** yetkisiyle eklenirsiniz. O zamana kadar depoyu *fork* edip
+> çekme isteği (PR) açabilirsiniz. İlk iş: aşağıdaki **Hızlı başlangıç** ile ev sayfasını açıp örnek ikizi deneyin.
+
 Bu kit, PEMF uygulamasının **Simülasyon** sekmesine gömülecek dijital ikiz (Three.js / WebGL) için hazırlandı. İkiz, uygulamanın içinde
 web'de bir `iframe`, mobilde bir `WebView` içinde açılır. Uygulamadan canlı veriyi **yalnızca okur**; cihaza komut gönderemez.
 
