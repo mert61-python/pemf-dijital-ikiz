@@ -16,6 +16,8 @@ web'de bir `iframe`, mobilde bir `WebView` içinde açılır. Uygulamadan canlı
 | `ev/index.html` + `ev/oynatici.js` | **kartsız geliştirme için ev sayfası**: ikizinizi `iframe` içinde açar, kayıtlı iletileri sözleşmedeki sırayla yeniden oynatır, sizden gelen iletileri denetler |
 | `ev/kayitlar/ornek_seans.js` | kayıtlı örnek iletiler (yaklaşık 40 sn: boşta → 7 bobin 100 Hz → faz değişimi → iki frekans → ACİL DURDUR → sıfırlama) |
 | `ornek-ikiz/index.html` | sözleşmeyi uygulayan **en küçük örnek ikiz** (Three.js yok; kesit haritası, bobin tablosu, ACİL DURDUR bandı, çevrimdışı geçiş) |
+| `uygulama/` | ana uygulamanın **gerçek Simülasyon (ve Kontrol) sekmesi** — ikizinizi uygulamanın içinde, canlı veriyle görmek için |
+| `sunucu/sahte_sunucu.py` | ana PEMF sunucusunun yerine geçen sahte sunucu: 7 bobini canlandırır, canlı durumu ve alan haritasını gönderir, ikizinizi `/simulator/` altında sunar |
 
 > Örnek iletilerdeki alan haritaları **sentetik bir tablodan** üretilmiştir (değerler gerçek kabini temsil etmez). Gerçek değerler,
 > uygulamaya bağlandığınızda ürünün kalibre alan modelinden gelir.
@@ -30,6 +32,28 @@ web'de bir `iframe`, mobilde bir `WebView` içinde açılır. Uygulamadan canlı
 4. **ACİL DURDUR mandalı** düğmesine basın. İkiziniz durumu açıkça göstermelidir.
 5. **Dil** seçimini değiştirin. Çerçeve `?dil=en` ile yeniden yüklenir; her metin İngilizce görünmelidir.
 6. Günlükte kırmızı "SÖZLEŞME DIŞI" satırı görmemelisiniz. İkiz yalnızca `pemf.ikiz.hazir` gönderebilir.
+
+## Uygulamanın gerçek Simülasyon sekmesinde deneme
+
+Ev sayfası kayıtlı iletileri oynatır. İkizinizi uygulamanın **kendi** Simülasyon sekmesinde, canlı veriyle görmek için (Python 3.10 ve
+Node.js 22 gerekir):
+
+```bat
+python -m pip install fastapi==0.136.3 uvicorn==0.48.0
+cd uygulama
+npm ci --legacy-peer-deps
+npm run export:web
+cd ..
+python sunucu/sahte_sunucu.py --ikiz ornek-ikiz
+```
+
+Tarayıcıda `http://127.0.0.1:8765/?sekme=simulasyon` adresini açın. `--ikiz` yerine kendi derleme klasörünüzü verin (içinde
+`index.html` olmalı). Kontrol sekmesinden bobin başlatıp durdurun; ikiziniz canlı durumu 1 saniye içinde göstermeli, `pemf.ikiz.hazir`
+gönderdikten sonra alan haritalarını da almalıdır (harita sentetiktir, kalibrasyon kimliği "sentetik-kit"). ACİL DURDUR düğmesine
+basınca ikiziniz mandalı açıkça göstermelidir. Sahte sunucuyu kapatınca (Ctrl+C) 3 saniye içinde çevrimdışı simülasyona geçmelidir.
+
+> Uygulama, `pemf.ikiz.hazir` iletisini çerçeve yüklenmeden önce gönderseniz de kabul eder (betiğiniz yüklenir yüklenmez göndermeniz
+> doğrudur).
 
 ## Teslim
 

@@ -1,8 +1,10 @@
-__pycache__/
 *.pyc
-.ruff_cache/
-.pytest_cache/
 .coverage
+.expo/
+.pytest_cache/
+.ruff_cache/
+.veri/
+__pycache__/
+dist/
 htmlcov/
 node_modules/
-dist/

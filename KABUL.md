@@ -17,3 +17,4 @@ uygulamanın Simülasyon sekmesi aynı ölçümleri yapar.
 | 10 | Derleme çıktısı tek klasördür, `/simulator/` altında göreli yollarla çalışır, boyutu 20 MB'yi geçmez | çıktı klasörü |
 | 11 | Kendi deposunda derleme + test CI'ı vardır | depo |
 | 12 | 3B model ve doku lisansları ticari kullanıma izin verir (lisans listesi teslimde) | lisans listesi |
+| 13 | Uygulamanın gerçek Simülasyon sekmesinde canlı durum ve alan haritası görünür; ACİL DURDUR mandalı ve çevrimdışı geçiş orada da çalışır | `uygulama/` + `python sunucu/sahte_sunucu.py --ikiz <derleme klasörünüz>`, `?sekme=simulasyon` |
