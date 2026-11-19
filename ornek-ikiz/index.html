@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEMF örnek ikiz</title>
+<!-- BAŞVURU İÇİN EN KÜÇÜK ikiz: sözleşme v1'i uygular (hazir gönderir, durum / alan dinler, ACİL DURDUR'u gösterir, alanı "Model
+     tahmini, ölçüm değil" etiketiyle çizer, 3 sn ileti gelmezse çevrimdışı simülasyona geçer). Three.js YOK — gerçek ikiz bunun yerine
+     3B sahneyi çizer. Bağımlılık / ağ isteği yok. -->
+<style>
+  body { margin:0; background:#0b1020; color:#e6ecf5; font:14px system-ui, sans-serif; padding:12px; }
+  .bant { padding:8px 12px; border-radius:8px; margin-bottom:8px; font-weight:700; }
+  #acil { background:#481F28; color:#ff8f8f; display:none; }
+  #cevrimdisi { background:#493414; color:#ffd27a; display:none; }
+  table { border-collapse:collapse; margin:8px 0; } td, th { border:1px solid #34415F; padding:4px 8px; text-align:right; }
+  .aktif { color:#22C55E; font-weight:700; }
+  #etiket { color:#F59E0B; font-weight:700; }
+  canvas { image-rendering:pixelated; width:min(560px, 100%); border:1px solid #34415F; }
+</style>
+</head>
+<body>
+<div id="acil" class="bant"></div>
+<div id="cevrimdisi" class="bant"></div>
+<div id="baglanti"></div>
+<table><thead><tr><th id="hBobin"></th><th id="hAktif"></th><th>Hz</th><th>%</th><th id="hFaz"></th></tr></thead><tbody id="bobinler"></tbody></table>
+<div id="etiket"></div>
+<canvas id="harita" width="28" height="21"></canvas>
+<div id="enYuksek"></div>
+<script>
+(function () {
+  "use strict";
+  var dil = new URLSearchParams(location.search).get("dil") === "en" ? "en" : "tr";
+  var M = {
+    tr: { acil: "ACİL DURDUR mandalı kurulu — bobinler durduruldu", cevrimdisi: "Cihazdan veri yok — çevrimdışı simülasyon", bagli: "Cihaz bağlı",
+          bagliDegil: "Cihaz bağlı değil", bobin: "Bobin", aktif: "Aktif", faz: "Faz (°)", evet: "evet", hayir: "hayır",
+          model: "Model tahmini, ölçüm değil", enYuksek: "En yüksek: ", durum: "Alan haritası durumu: " },
+    en: { acil: "EMERGENCY STOP latch set — coils stopped", cevrimdisi: "No data from the device — offline simulation", bagli: "Device connected",
+          bagliDegil: "Device not connected", bobin: "Coil", aktif: "Active", faz: "Phase (°)", evet: "yes", hayir: "no",
+          model: "Model estimate, not a measurement", enYuksek: "Peak: ", durum: "Field map status: " }
+  }[dil];
+  document.documentElement.lang = dil;
+  document.getElementById("hBobin").textContent = M.bobin;
+  document.getElementById("hAktif").textContent = M.aktif;
+  document.getElementById("hFaz").textContent = M.faz;
+  var sonDurum = 0;
+
+  function hazirGonder() {
+    var h = JSON.stringify({ tur: "pemf.ikiz.hazir", surum: 1 });
+    if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(h);
+    else if (window.parent !== window) window.parent.postMessage(h, "*");
+  }
+  function renk(o) {
+    o = Math.max(0, Math.min(1, o));
+    var d = [[0, 30, 41, 99], [0.35, 14, 165, 233], [0.7, 250, 204, 21], [1, 220, 38, 38]], k = 0;
+    while (k < d.length - 2 && o > d[k + 1][0]) k++;
+    var u = (o - d[k][0]) / (d[k + 1][0] - d[k][0]);
+    return [1, 2, 3].map(function (j) { return Math.round(d[k][j] + (d[k + 1][j] - d[k][j]) * u); });
+  }
+  function durum(o) {
+    sonDurum = Date.now();
+    document.getElementById("acil").style.display = o.acilDurdur ? "block" : "none";
+    document.getElementById("acil").textContent = M.acil;
+    document.getElementById("baglanti").textContent = o.cihazBagli ? M.bagli : M.bagliDegil;
+    document.getElementById("bobinler").innerHTML = o.bobinler.map(function (b) {
+      return "<tr><td>" + b.bobin + "</td><td class='" + (b.aktif ? "aktif" : "") + "'>" + (b.aktif ? M.evet : M.hayir) + "</td><td>" +
+        (b.frekansHz == null ? "—" : b.frekansHz) + "</td><td>" + (b.dutyYuzde == null ? "—" : b.dutyYuzde) + "</td><td>" +
+        (b.fazDerece == null ? "—" : b.fazDerece) + "</td></tr>";
+    }).join("");
+  }
+  function alan(o) {
+    document.getElementById("etiket").textContent = M.model;
+    if (o.durum !== "tamam") { document.getElementById("enYuksek").textContent = M.durum + o.durum; return; }
+    var b = Uint8Array.from(atob(o.deger), function (c) { return c.charCodeAt(0); });
+    var nx = o.izgara.boyut[0], ny = o.izgara.boyut[1], nz = o.izgara.boyut[2];
+    var cv = document.getElementById("harita"); cv.width = nx; cv.height = nz;
+    var g = cv.getContext("2d"), img = g.createImageData(nx, nz), enb = (o.enYuksek && o.enYuksek.mT) || 1;
+    for (var satir = 0; satir < nz; satir++) for (var sutun = 0; sutun < nx; sutun++) {
+      var ix = nx - 1 - sutun, iz = nz - 1 - satir, k = b[(ix * ny + 0) * nz + iz], p = (satir * nx + sutun) * 4;
+      var c = k === o.yok ? [0, 0, 0] : renk((k * o.olcek) / enb);
+      img.data[p] = c[0]; img.data[p + 1] = c[1]; img.data[p + 2] = c[2]; img.data[p + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    document.getElementById("enYuksek").textContent = o.enYuksek ? M.enYuksek + o.enYuksek.mT.toFixed(2) + " mT" : "";
+  }
+  function dinle(e) {
+    var o; try { o = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+    if (!o || o.surum !== 1) return;
+    if (o.tur === "pemf.ikiz.durum") durum(o); else if (o.tur === "pemf.ikiz.alan") alan(o);
+  }
+  window.addEventListener("message", dinle);
+  document.addEventListener("message", dinle);
+  setInterval(function () {
+    var kopuk = Date.now() - sonDurum > 3000;
+    var c = document.getElementById("cevrimdisi");
+    c.style.display = kopuk ? "block" : "none"; c.textContent = M.cevrimdisi;
+  }, 500);
+  hazirGonder();
+})();
+</script>
+</body>
+</html>

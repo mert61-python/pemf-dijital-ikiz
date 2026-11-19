@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEMF ikiz ev sayfası</title>
+<!-- Kartsız geliştirme: Simülasyon sekmesini taklit eder. İkizi iframe'de açar, kayıtlı GERÇEK biçimli iletileri (sözleşme v1)
+     postMessage ile yeniden oynatır, ikizden gelen iletileri sözleşmeye göre denetler. İnternet gerektirmez. -->
+<style>
+  :root { --bg:#121827; --panel:#202A42; --kenar:#34415F; --metin:#F7FAFC; --soluk:#AAB6CE; --yesil:#22C55E; --kirmizi:#EF4444; --sari:#F59E0B; }
+  body { margin:0; background:var(--bg); color:var(--metin); font:14px system-ui, sans-serif; display:flex; height:100vh; }
+  #yan { width:320px; padding:12px; box-sizing:border-box; background:var(--panel); border-right:1px solid var(--kenar); overflow:auto; }
+  #ana { flex:1; display:flex; }
+  iframe { flex:1; border:0; background:#000; }
+  button, select { background:#26324F; color:var(--metin); border:1px solid var(--kenar); border-radius:8px; padding:8px 10px; margin:2px; cursor:pointer; }
+  button.aktif { border-color:var(--sari); color:var(--sari); }
+  h1 { font-size:16px; margin:0 0 8px; } h2 { font-size:13px; color:var(--soluk); margin:14px 0 6px; }
+  #gunluk { font:12px ui-monospace, monospace; white-space:pre-wrap; }
+  .tamam { color:var(--yesil); } .ihlal { color:var(--kirmizi); } .bilgi { color:var(--soluk); }
+  @media (max-width: 760px) { body { flex-direction:column; height:auto; } #yan { width:100%; } iframe { height:70vh; } }
+</style>
+</head>
+<body>
+<div id="yan">
+  <h1>PEMF dijital ikiz — ev sayfası</h1>
+  <div class="bilgi">İkiz: <code id="ikizAdres"></code></div>
+  <h2>Oynatıcı</h2>
+  <button id="oynat">Oynat</button><button id="duraklat">Duraklat</button><button id="basa">Başa sar</button>
+  <div class="bilgi">Kayıt zamanı: <span id="zaman">0,0</span> sn · <span id="ilerleme"></span></div>
+  <h2>Durumlar</h2>
+  <button id="kes">Cihaz yok (iletiyi kes)</button>
+  <button id="acil">ACİL DURDUR mandalı</button>
+  <div>Dil: <select id="dil"><option value="tr">tr</option><option value="en">en</option></select></div>
+  <h2>İkizden gelenler (yalnız <code>pemf.ikiz.hazir</code> izinli)</h2>
+  <div id="gunluk"></div>
+</div>
+<div id="ana"><iframe id="ikiz" title="PEMF dijital ikiz"></iframe></div>
+<script src="kayitlar/ornek_seans.js"></script>
+<script src="oynatici.js"></script>
+</body>
+</html>
